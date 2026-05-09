@@ -20,10 +20,18 @@
                 style="height: 100px"></textarea>
             <label for="floatingTextarea2">Comments</label>
         </div>
-        <button class="btn btn-primary add-btn mt-2">Add</button>
 
-        <div class="table-responsive">
-            <table class="table table-primary">
+        <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+                <button class="btn btn-primary add-btn mt-2">Add</button>
+                <div class="d-flex">
+                    <input class="form-control me-2 search-keyword" type="search" placeholder="Search" aria-label="Search"/>
+                </div>
+            </div>
+        </nav>
+
+        <div class="table-responsive mt-2">
+            <table class="table table-primary table-hover">
                 <thead>
                     <tr>
                         <th>Notes</th>
@@ -41,6 +49,40 @@
     crossorigin="anonymous"></script>
 <script>
     $(document).ready(function () {
+
+
+        function addNewRow(note){
+            let $tr = $("<tr></tr>"); 
+            let $td1 = $("<td></td>");
+            let $td2 = $("<td></td>");
+            let $ediBtn = $("<button>Edit</button>");
+            let $deleteBtn = $("<button>Delete</button>");
+            
+            $td1.text(note.note);
+            $td2.append($ediBtn);
+            $td2.append($deleteBtn);
+
+            $tr.append($td1);
+            $tr.append($td2);
+            $('.notes').append($tr);
+        }
+        
+        function loadData(data, textStatus) {
+            if (textStatus == "success") {
+                $('.notes').empty();
+                data.notes.forEach((note)=>{
+                    addNewRow(note);
+                })
+            }
+        }
+
+        $.ajax({
+            url: "/notes/notes-api.php",
+            method: "GET",
+            contentType: "application/json",
+            success: loadData
+        });
+
         $('.add-btn').click(function () {
             $.ajax({
                 url: "/notes/add-note-api.php",
@@ -52,6 +94,11 @@
                 }),
                 success: function (data, textStatus) {
                     if (textStatus == "success") {
+                        console.log(data);
+                        addNewRow({
+                            id:data.last_id,
+                            note:$('.note').val()
+                        });
                         $('.note').val("");
                     }
                 },
@@ -61,6 +108,29 @@
                 }
             });
         });
+    
+        $('.search-keyword').on("input",function(){
+            
+            $.ajax({
+                url: "/notes/search-note-api.php",
+                method: "POST",
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({
+                    search: $('.search-keyword').val()
+                }),
+                success: function (data, textStatus) {
+                    if (textStatus == "success") {
+                        loadData(data, textStatus);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                }
+            });
+        });
+
     });
 
 
