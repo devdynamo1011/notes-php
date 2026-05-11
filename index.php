@@ -13,6 +13,29 @@
 </head>
 
 <body>
+
+    <div class="modal fade centered" tabindex="-1" id="exampleModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-floating">
+                        <textarea class="form-control update-note" placeholder="Leave a comment here"
+                            style="height: 100px"></textarea>
+                        <label for="floatingTextarea2">Comments</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary update-note-btn">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
 
         <div class="form-floating">
@@ -50,6 +73,32 @@
 <script>
     $(document).ready(function () {
 
+        function setModal(note){
+            $('.update-note').val(note.note);
+           
+            $('.update-note-btn').click(function(){
+                $.ajax({
+                    url: "/notes/update-note-api.php",
+                    method: "PATCH",
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        id: note.id,
+                        note: $('.update-note').val()
+                    }),
+                    success: function (data, textStatus) {
+                        if (textStatus == "success") {
+                            $("#exampleModal").removeClass("show");
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(jqXHR);
+                        console.log(textStatus);
+                    }
+                });
+            });
+
+        }
 
         function addNewRow(note){
             let $tr = $("<tr></tr>"); 
@@ -58,6 +107,34 @@
             let $ediBtn = $("<button>Edit</button>");
             let $deleteBtn = $("<button>Delete</button>");
             
+            $deleteBtn.click(function(){
+                $.ajax({
+                    url: "/notes/delete-note-api.php",
+                    method: "DELETE",
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        id: note.id
+                    }),
+                    success: function (data, textStatus) {
+                        if (textStatus == "success") {
+                            $deleteBtn.parent().parent().remove();
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(jqXHR);
+                        console.log(textStatus);
+                    }
+                });
+            });
+
+            $ediBtn.attr("data-bs-toggle","modal");
+            $ediBtn.attr("data-bs-target","#exampleModal");
+
+            $ediBtn.click(function(){
+                setModal(note);
+            });
+
             $td1.text(note.note);
             $td2.append($ediBtn);
             $td2.append($deleteBtn);
